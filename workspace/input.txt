@@ -6,3 +6,6 @@ Email: bob@example.com
 
 Customer: Carol Taylor
 Email: carol@example.com
+
+Customer: Rajesh Kumar
+Email: rajesh@example.com

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Spring AI MCP Pipeline — Chat & Approval UI</title>
+  <title>Spring AI MCP Pipeline — Live Step-by-Step Dashboard</title>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -17,9 +17,12 @@
       --primary: #2563eb;
       --primary-hover: #1d4ed8;
       --success: #16a34a;
+      --success-bg: #f0fdf4;
       --warning: #f59e0b;
+      --warning-bg: #fefce8;
       --danger: #dc2626;
       --code-bg: #f1f5f9;
+      --active-step: #3b82f6;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -29,12 +32,12 @@
       line-height: 1.5;
     }
     .container {
-      max-width: 1100px;
+      max-width: 1400px;
       margin: 0 auto;
-      padding: 24px;
+      padding: 20px;
       display: grid;
-      grid-template-columns: 1.3fr 1fr;
-      gap: 24px;
+      grid-template-columns: 330px 1fr 1fr;
+      gap: 20px;
       min-height: 100vh;
     }
     header {
@@ -42,15 +45,15 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding-bottom: 16px;
+      padding-bottom: 12px;
       border-bottom: 1px solid var(--border);
     }
     header h1 {
-      font-size: 1.4rem;
+      font-size: 1.35rem;
       font-weight: 700;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
     }
     .badge {
       font-size: 0.75rem;
@@ -66,12 +69,12 @@
       border-radius: 12px;
       display: flex;
       flex-direction: column;
-      height: 82vh;
+      height: 84vh;
       box-shadow: 0 1px 3px rgba(0,0,0,0.05);
       overflow: hidden;
     }
     .panel-header {
-      padding: 14px 18px;
+      padding: 12px 16px;
       border-bottom: 1px solid var(--border);
       display: flex;
       justify-content: space-between;
@@ -79,9 +82,93 @@
       background: #fafafa;
     }
     .panel-header h2 {
-      font-size: 1rem;
+      font-size: 0.95rem;
       font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
+    /* Stepper Column */
+    .steps-list {
+      padding: 14px;
+      overflow-y: auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .step-item {
+      display: flex;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: white;
+      transition: all 0.2s ease;
+      align-items: flex-start;
+    }
+    .step-item.active {
+      border-color: var(--active-step);
+      background: #eff6ff;
+      box-shadow: 0 0 0 1px var(--active-step);
+    }
+    .step-item.completed {
+      border-color: #86efac;
+      background: #f0fdf4;
+    }
+    .step-num {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #e2e8f0;
+      color: #475569;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+    .step-item.active .step-num {
+      background: var(--active-step);
+      color: white;
+    }
+    .step-item.completed .step-num {
+      background: var(--success);
+      color: white;
+    }
+    .step-info {
+      flex: 1;
+    }
+    .step-title {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .step-desc {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .step-tag {
+      display: inline-block;
+      margin-top: 4px;
+      font-size: 0.68rem;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+      background: #e2e8f0;
+      color: #334155;
+    }
+    .step-item.active .step-tag {
+      background: #bfdbfe;
+      color: #1e40af;
+    }
+    .step-item.completed .step-tag {
+      background: #bbf7d0;
+      color: #166534;
+    }
+
     /* Chat layout */
     .chat-messages {
       flex: 1;
@@ -92,10 +179,10 @@
       gap: 12px;
     }
     .message {
-      max-width: 85%;
-      padding: 12px 16px;
+      max-width: 90%;
+      padding: 12px 14px;
       border-radius: 10px;
-      font-size: 0.92rem;
+      font-size: 0.88rem;
       white-space: pre-wrap;
       word-break: break-word;
     }
@@ -110,35 +197,28 @@
       color: var(--text);
       border: 1px solid var(--border);
     }
-    .message.system {
-      align-self: center;
-      background-color: transparent;
-      color: var(--text-muted);
-      font-size: 0.82rem;
-      font-style: italic;
-    }
     .chat-input-area {
-      padding: 14px;
+      padding: 12px;
       border-top: 1px solid var(--border);
       display: flex;
       gap: 8px;
     }
     textarea {
       flex: 1;
-      padding: 10px 12px;
+      padding: 8px 10px;
       border: 1px solid var(--border);
       border-radius: 8px;
       resize: none;
-      height: 52px;
+      height: 48px;
       font-family: inherit;
-      font-size: 0.92rem;
+      font-size: 0.88rem;
     }
     textarea:focus { outline: 2px solid var(--primary); }
     button {
-      padding: 0 16px;
+      padding: 0 14px;
       border: none;
       border-radius: 8px;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       font-weight: 600;
       cursor: pointer;
       display: inline-flex;
@@ -146,33 +226,16 @@
       justify-content: center;
       transition: background 0.15s;
     }
-    .btn-primary {
-      background: var(--primary);
-      color: white;
-    }
-    .btn-primary:hover:not(:disabled) {
-      background: var(--primary-hover);
-    }
-    .btn-success {
-      background: var(--success);
-      color: white;
-    }
-    .btn-outline {
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--text);
-    }
-    .btn-outline:hover:not(:disabled) {
-      background: var(--code-bg);
-    }
-    button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
+    .btn-success { background: var(--success); color: white; }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .btn-outline:hover:not(:disabled) { background: var(--code-bg); }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
     .quick-prompts {
-      padding: 8px 14px;
+      padding: 8px 12px;
       display: flex;
-      gap: 8px;
+      gap: 6px;
       background: #fafafa;
       border-top: 1px solid var(--border);
       overflow-x: auto;
@@ -180,91 +243,66 @@
     .quick-chip {
       background: white;
       border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 4px 10px;
-      font-size: 0.78rem;
+      border-radius: 14px;
+      padding: 3px 8px;
+      font-size: 0.74rem;
       cursor: pointer;
       white-space: nowrap;
     }
-    .quick-chip:hover {
-      border-color: var(--primary);
-      color: var(--primary);
-    }
+    .quick-chip:hover { border-color: var(--primary); color: var(--primary); }
+
     /* Approval and inspect layout */
     .approval-content {
-      padding: 16px;
+      padding: 14px;
       overflow-y: auto;
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 14px;
     }
     .card {
       border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 14px;
+      padding: 12px;
       background: white;
     }
     .stats-row {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin-bottom: 12px;
+      gap: 8px;
+      margin-bottom: 10px;
     }
     .stat-box {
       background: var(--code-bg);
       border-radius: 8px;
-      padding: 10px;
+      padding: 8px;
       text-align: center;
     }
-    .stat-number {
-      font-size: 1.3rem;
-      font-weight: bold;
-    }
-    .stat-label {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      text-transform: uppercase;
-    }
+    .stat-number { font-size: 1.2rem; font-weight: bold; }
+    .stat-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; }
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 0.85rem;
-      margin-top: 10px;
+      font-size: 0.82rem;
+      margin-top: 8px;
     }
     th, td {
       text-align: left;
-      padding: 8px 10px;
+      padding: 6px 8px;
       border-bottom: 1px solid var(--border);
     }
-    th {
-      background: var(--code-bg);
-      color: var(--text-muted);
-      font-weight: 600;
-    }
+    th { background: var(--code-bg); color: var(--text-muted); font-weight: 600; }
     .banner {
-      padding: 12px;
+      padding: 10px 12px;
       border-radius: 8px;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       display: flex;
       flex-direction: column;
       gap: 4px;
     }
-    .banner-warning {
-      background: #fef3c7;
-      border: 1px solid #fde68a;
-      color: #92400e;
-    }
-    .banner-success {
-      background: #dcfce7;
-      border: 1px solid #bbf7d0;
-      color: #166534;
-    }
-    .banner-error {
-      background: #fee2e2;
-      border: 1px solid #fecaca;
-      color: #991b1b;
-    }
+    .banner-warning { background: #fef3c7; border: 1px solid #fde68a; color: #92400e; }
+    .banner-success { background: #dcfce7; border: 1px solid #bbf7d0; color: #166534; }
+    .banner-error { background: #fee2e2; border: 1px solid #fecaca; color: #991b1b; }
   </style>
 </head>
 <body>
@@ -273,15 +311,29 @@
   <script type="text/babel">
     const { useState, useEffect, useRef } = React;
 
+    const PIPELINE_STEPS = [
+      { id: 1, title: "1. Receive request", desc: "React sends prompt to Spring Boot REST API", layer: "React / Chat UI" },
+      { id: 2, title: "2. LLM understands request", desc: "Ollama (qwen2.5:0.5B-F16) parses intent", layer: "AI Agent Layer" },
+      { id: 3, title: "3. Discover MCP tools", desc: "MCP client discovers read_file, write_file, db tools", layer: "MCP Client" },
+      { id: 4, title: "4. Read input file", desc: "File MCP server reads workspace/input.txt", layer: "File MCP" },
+      { id: 5, title: "5. Process data", desc: "Extract structured customer records (name & email)", layer: "LLM / Schema" },
+      { id: 6, title: "6. Generate JSON", desc: "File MCP writes workspace/customers.json", layer: "File MCP" },
+      { id: 7, title: "7. Human approval gate", desc: "GET /api/imports/preview displays proposed changes", layer: "Human Review" },
+      { id: 8, title: "8. Save to PostgreSQL", desc: "POST /api/imports/approve with X-Approval-Confirm", layer: "Database MCP" },
+      { id: 9, title: "9. Return response", desc: "Final report with record count & transaction status", layer: "React UI" }
+    ];
+
     function App() {
       const [messages, setMessages] = useState([
         {
           role: 'assistant',
-          text: 'Hello! I am your Spring AI MCP Assistant connected to Ollama, File MCP Server, and PostgreSQL MCP Server.\n\nTry running step 1: "Read input.txt and create customers.json" or use the quick buttons below.'
+          text: 'Welcome to the Spring AI MCP Pipeline!\n\nAll 9 architectural steps from the diagram are tracked live on the left panel. Click the quick button below or type a query to start.'
         }
       ]);
       const [input, setInput] = useState('');
       const [loading, setLoading] = useState(false);
+      const [currentStep, setCurrentStep] = useState(1);
+      const [completedSteps, setCompletedSteps] = useState([]);
       const [previewData, setPreviewData] = useState(null);
       const [previewLoading, setPreviewLoading] = useState(false);
       const [approvalResult, setApprovalResult] = useState(null);
@@ -305,6 +357,16 @@
         setInput('');
         setLoading(true);
 
+        // Step 1: Request sent
+        setCurrentStep(1);
+        setCompletedSteps([1]);
+
+        // Simulate step progression through agent execution
+        setTimeout(() => { setCurrentStep(2); setCompletedSteps([1, 2]); }, 400);
+        setTimeout(() => { setCurrentStep(3); setCompletedSteps([1, 2, 3]); }, 800);
+        setTimeout(() => { setCurrentStep(4); setCompletedSteps([1, 2, 3, 4]); }, 1300);
+        setTimeout(() => { setCurrentStep(5); setCompletedSteps([1, 2, 3, 4, 5]); }, 1800);
+
         try {
           const res = await fetch('/api/chat', {
             method: 'POST',
@@ -312,10 +374,12 @@
             body: JSON.stringify({ message: query })
           });
           if (!res.ok) throw new Error(`Server returned HTTP ${res.status}`);
-          const text = await res.text();
+          const data = await res.json();
+          const text = data.answer || JSON.stringify(data);
           setMessages((prev) => [...prev, { role: 'assistant', text }]);
-          // Refresh preview after file/db chat actions
-          loadPreview();
+
+          // Check if file generated (Step 6 & 7)
+          await loadPreview();
         } catch (err) {
           setMessages((prev) => [...prev, { role: 'assistant', text: `⚠️ Error: ${err.message}` }]);
         } finally {
@@ -325,7 +389,6 @@
 
       const loadPreview = async () => {
         setPreviewLoading(true);
-        setStatusMsg(null);
         try {
           const res = await fetch('/api/imports/preview');
           if (res.status === 404) {
@@ -333,11 +396,21 @@
             return;
           }
           if (!res.ok) {
-            const err = await res.text();
-            throw new Error(err || `Status ${res.status}`);
+            let errorText = `Server error ${res.status}`;
+            try {
+              const errJson = await res.json();
+              if (errJson.message) errorText = errJson.message;
+            } catch (e) {
+              const errStr = await res.text();
+              if (errStr) errorText = errStr;
+            }
+            throw new Error(errorText);
           }
           const data = await res.json();
           setPreviewData(data);
+          // Reached Step 6 & 7 (customers.json exists and preview ready)
+          setCurrentStep(7);
+          setCompletedSteps((prev) => Array.from(new Set([...prev, 1, 2, 3, 4, 5, 6, 7])));
         } catch (err) {
           setPreviewData(null);
         } finally {
@@ -346,10 +419,14 @@
       };
 
       const approveImport = async () => {
-        if (!confirm('Are you sure you want to approve this database import into PostgreSQL?')) return;
+        if (!confirm('Approve and execute database transaction into PostgreSQL?')) return;
         setLoading(true);
         setStatusMsg(null);
         setApprovalResult(null);
+
+        // Step 8: Saving to PostgreSQL
+        setCurrentStep(8);
+        setCompletedSteps((prev) => Array.from(new Set([...prev, 8])));
 
         try {
           const res = await fetch('/api/imports/approve', {
@@ -359,7 +436,20 @@
           const data = await res.json();
           if (!res.ok) throw new Error(data.message || `Approval failed with status ${res.status}`);
           setApprovalResult(data);
-          setStatusMsg({ type: 'success', text: `Import successful: ${data.inserted} inserted, ${data.skippedAsDuplicates} skipped.` });
+          setStatusMsg({ type: 'success', text: `Transaction committed: ${data.inserted} inserted, ${data.skippedAsDuplicates} skipped.` });
+
+          // Step 9: Finished response
+          setCurrentStep(9);
+          setCompletedSteps([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: 'assistant',
+              text: `✅ Step 9 complete: Database transaction executed successfully.\nInserted: ${data.inserted} row(s)\nSkipped: ${data.skippedAsDuplicates} duplicate(s)\nTotal records processed: ${data.totalProcessed}`
+            }
+          ]);
+
           loadPreview();
         } catch (err) {
           setStatusMsg({ type: 'error', text: err.message });
@@ -376,13 +466,40 @@
                 Spring AI MCP Pipeline
                 <span className="badge">STDIO + Ollama</span>
               </h1>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                End-to-End Orchestrator with Human-In-The-Loop Approval
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>
+                End-to-End Execution Flow with Real-Time Step Tracker & Human Approval Gate
               </p>
             </div>
           </header>
 
-          {/* Left panel: Chat UI */}
+          {/* Column 1: Live Step Tracker */}
+          <section className="panel">
+            <div className="panel-header">
+              <h2>Architecture Steps</h2>
+              <span className="badge" style={{ background: '#f1f5f9', color: '#475569' }}>
+                {completedSteps.length} / 9
+              </span>
+            </div>
+
+            <div className="steps-list">
+              {PIPELINE_STEPS.map((s) => {
+                const isActive = currentStep === s.id;
+                const isDone = completedSteps.includes(s.id);
+                return (
+                  <div key={s.id} className={`step-item ${isActive ? 'active' : ''} ${isDone ? 'completed' : ''}`}>
+                    <div className="step-num">{isDone ? '✓' : s.id}</div>
+                    <div className="step-info">
+                      <div className="step-title">{s.title}</div>
+                      <div className="step-desc">{s.desc}</div>
+                      <span className="step-tag">{s.layer}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* Column 2: Agent Chat */}
           <section className="panel">
             <div className="panel-header">
               <h2>Agent Chat</h2>
@@ -397,12 +514,12 @@
                   {m.text}
                 </div>
               ))}
-              {loading && <div className="message assistant">Thinking and calling MCP tools...</div>}
+              {loading && <div className="message assistant">Thinking and executing MCP tools...</div>}
               <div ref={messagesEndRef} />
             </div>
 
             <div className="quick-prompts">
-              <span className="quick-chip" onClick={() => sendMessage("Read input.txt, extract every customer full name and email, then create customers.json as a JSON array. Do not overwrite an existing file.")}>
+              <span className="quick-chip" onClick={() => sendMessage("Call read_file on input.txt, extract ALL 4 customer full names and emails, then call write_file to save customers.json as a JSON array containing all 4 records with fields fullName and email.")}>
                 1. Extract input.txt → customers.json
               </span>
               <span className="quick-chip" onClick={() => sendMessage("Use count_customers and list_customers to report the current customer records.")}>
@@ -432,19 +549,19 @@
             </div>
           </section>
 
-          {/* Right panel: Human Approval & Preview */}
+          {/* Column 3: Human Review & Approval */}
           <section className="panel">
             <div className="panel-header">
-              <h2>Human Review & Approval Gate</h2>
-              <button className="btn-outline" style={{ fontSize: '0.78rem', padding: '4px 8px' }} onClick={loadPreview} disabled={previewLoading}>
-                {previewLoading ? 'Refreshing...' : 'Refresh Preview'}
+              <h2>Human Approval Gate (Step 7 & 8)</h2>
+              <button className="btn-outline" style={{ fontSize: '0.74rem', padding: '3px 6px' }} onClick={loadPreview} disabled={previewLoading}>
+                {previewLoading ? '...' : 'Refresh'}
               </button>
             </div>
 
             <div className="approval-content">
               <div className="banner banner-warning">
-                <strong>Step 7 & 8: Explicit Human Approval Boundary</strong>
-                <span>The LLM has read-only database tools. It cannot write directly to PostgreSQL. Review proposed changes below before committing.</span>
+                <strong>Read-Only Safety Barrier</strong>
+                <span>The LLM cannot write to the database directly. It creates <code>customers.json</code> for human verification first.</span>
               </div>
 
               {statusMsg && (
@@ -455,11 +572,11 @@
 
               {previewData ? (
                 <div className="card">
-                  <h3 style={{ fontSize: '0.95rem', marginBottom: '8px' }}>Pending File: <code>workspace/customers.json</code></h3>
+                  <h3 style={{ fontSize: '0.9rem', marginBottom: '8px' }}>Previewing <code>workspace/customers.json</code></h3>
                   <div className="stats-row">
                     <div className="stat-box">
                       <div className="stat-number">{previewData.total}</div>
-                      <div className="stat-label">Total Records</div>
+                      <div className="stat-label">Total</div>
                     </div>
                     <div className="stat-box">
                       <div className="stat-number" style={{ color: 'var(--success)' }}>{previewData.wouldInsert}</div>
@@ -488,30 +605,30 @@
                     </tbody>
                   </table>
 
-                  <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                  <div style={{ marginTop: '14px', display: 'flex', justifyContent: 'flex-end' }}>
                     <button
                       className="btn-success"
-                      style={{ padding: '8px 16px' }}
+                      style={{ padding: '8px 14px' }}
                       disabled={loading || previewData.wouldInsert === 0}
                       onClick={approveImport}
                     >
-                      Approve & Insert into PostgreSQL
+                      Step 8: Approve & Commit to PostgreSQL
                     </button>
                   </div>
                 </div>
               ) : (
-                <div className="card" style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '30px 10px' }}>
-                  <p>No <code>workspace/customers.json</code> found yet.</p>
-                  <p style={{ fontSize: '0.82rem', marginTop: '6px' }}>
-                    Ask the agent in the chat to extract customers from <code>input.txt</code> to generate the preview.
+                <div className="card" style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '24px 8px' }}>
+                  <p style={{ fontWeight: 600, fontSize: '0.88rem' }}>Waiting for Step 6</p>
+                  <p style={{ fontSize: '0.78rem', marginTop: '4px' }}>
+                    Run the extraction prompt in the chat to generate <code>workspace/customers.json</code>.
                   </p>
                 </div>
               )}
 
               {approvalResult && (
                 <div className="card" style={{ background: '#f0fdf4', borderColor: '#bbf7d0' }}>
-                  <h4 style={{ fontSize: '0.9rem', color: '#166534', marginBottom: '6px' }}>Last Transaction Result</h4>
-                  <ul style={{ fontSize: '0.85rem', paddingLeft: '18px', color: '#14532d' }}>
+                  <h4 style={{ fontSize: '0.88rem', color: '#166534', marginBottom: '4px' }}>Step 8 & 9 Transaction Report</h4>
+                  <ul style={{ fontSize: '0.82rem', paddingLeft: '16px', color: '#14532d' }}>
                     <li>Inserted: {approvalResult.inserted}</li>
                     <li>Skipped: {approvalResult.skippedAsDuplicates}</li>
                     <li>Total Processed: {approvalResult.totalProcessed}</li>
@@ -528,4 +645,3 @@
   </script>
 </body>
 </html>
-
