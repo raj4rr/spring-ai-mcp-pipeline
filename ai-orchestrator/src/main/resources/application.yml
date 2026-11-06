@@ -1,0 +1,48 @@
+server:
+ port: ${SERVER_PORT:8080}
+spring:
+ application:
+  name: ai-orchestrator
+ main:
+  banner-mode: off
+ ai:
+  ollama:
+   base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+   chat:
+    model: ${OLLAMA_MODEL:qwen2.5:0.5b-instruct-fp16}
+    options:
+     temperature: 0.1
+  mcp:
+   client:
+    name: ai-orchestrator
+    version: 1.0.0
+    type: SYNC
+    request-timeout: 30s
+    stdio:
+     connections:
+      file-server:
+       command: ${JAVA_BIN:java}
+       args:
+        - -jar
+        - ${FILE_MCP_JAR:file-mcp-server/target/file-mcp-server-1.0.0.jar}
+       env:
+        MCP_FILES_ROOT: ${MCP_FILES_ROOT:./workspace}
+      postgres-server:
+       command: ${JAVA_BIN:java}
+       args:
+        - -jar
+        - ${POSTGRES_MCP_JAR:postgres-mcp-server/target/postgres-mcp-server-1.0.0.jar}
+       env:
+        DB_URL: ${DB_URL:jdbc:postgresql://localhost:5432/mcp_demo}
+        DB_USERNAME: ${DB_USERNAME:mcp_user}
+        DB_PASSWORD: ${DB_PASSWORD:mcp_password}
+ datasource:
+  url: ${DB_URL:jdbc:postgresql://localhost:5432/mcp_demo}
+  username: ${DB_USERNAME:mcp_user}
+  password: ${DB_PASSWORD:mcp_password}
+  hikari:
+   maximum-pool-size: 5
+   connection-timeout: 5000
+app:
+ files:
+  root: ${MCP_FILES_ROOT:./workspace}

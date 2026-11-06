@@ -1,0 +1,23 @@
+spring:
+ application:
+  name: postgres-mcp-server
+ main:
+  banner-mode: off
+ ai:
+  mcp:
+   server:
+    name: postgres-mcp-server
+    version: 1.0.0
+    type: SYNC
+    stdio: true
+ datasource:
+  url: ${DB_URL:jdbc:postgresql://localhost:5432/mcp_demo}
+  username: ${DB_USERNAME:mcp_user}
+  password: ${DB_PASSWORD:mcp_password}
+  hikari:
+   maximum-pool-size: 3
+   connection-timeout: 5000
+ sql:
+  init:
+   mode: always
+   schema-locations: classpath:schema.sql

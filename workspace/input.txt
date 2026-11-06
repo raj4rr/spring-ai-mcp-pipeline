@@ -1,0 +1,8 @@
+Customer: Alice Johnson
+Email: alice@example.com
+
+Customer: Bob Smith
+Email: bob@example.com
+
+Customer: Carol Taylor
+Email: carol@example.com

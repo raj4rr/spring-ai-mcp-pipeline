@@ -1,0 +1,15 @@
+spring:
+ application:
+  name: file-mcp-server
+ main:
+  banner-mode: off
+ ai:
+  mcp:
+   server:
+    name: file-mcp-server
+    version: 1.0.0
+    type: SYNC
+    stdio: true
+app:
+ files:
+  root: ${MCP_FILES_ROOT:./workspace}
