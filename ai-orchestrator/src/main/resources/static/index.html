@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spring AI MCP Pipeline — Chat & Approval UI</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --success: #16a34a;
+      --warning: #f59e0b;
+      --danger: #dc2626;
+      --code-bg: #f1f5f9;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px;
+      display: grid;
+      grid-template-columns: 1.3fr 1fr;
+      gap: 24px;
+      min-height: 100vh;
+    }
+    header {
+      grid-column: 1 / -1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    header h1 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .badge {
+      font-size: 0.75rem;
+      background: #e0f2fe;
+      color: #0369a1;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-weight: 600;
+    }
+    .panel {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      height: 82vh;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      overflow: hidden;
+    }
+    .panel-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #fafafa;
+    }
+    .panel-header h2 {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    /* Chat layout */
+    .chat-messages {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .message {
+      max-width: 85%;
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 0.92rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .message.user {
+      align-self: flex-end;
+      background-color: var(--primary);
+      color: white;
+    }
+    .message.assistant {
+      align-self: flex-start;
+      background-color: var(--code-bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .message.system {
+      align-self: center;
+      background-color: transparent;
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      font-style: italic;
+    }
+    .chat-input-area {
+      padding: 14px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 8px;
+    }
+    textarea {
+      flex: 1;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      resize: none;
+      height: 52px;
+      font-family: inherit;
+      font-size: 0.92rem;
+    }
+    textarea:focus { outline: 2px solid var(--primary); }
+    button {
+      padding: 0 16px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: var(--primary-hover);
+    }
+    .btn-success {
+      background: var(--success);
+      color: white;
+    }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .btn-outline:hover:not(:disabled) {
+      background: var(--code-bg);
+    }
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .quick-prompts {
+      padding: 8px 14px;
+      display: flex;
+      gap: 8px;
+      background: #fafafa;
+      border-top: 1px solid var(--border);
+      overflow-x: auto;
+    }
+    .quick-chip {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 4px 10px;
+      font-size: 0.78rem;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .quick-chip:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    /* Approval and inspect layout */
+    .approval-content {
+      padding: 16px;
+      overflow-y: auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .card {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      background: white;
+    }
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .stat-box {
+      background: var(--code-bg);
+      border-radius: 8px;
+      padding: 10px;
+      text-align: center;
+    }
+    .stat-number {
+      font-size: 1.3rem;
+      font-weight: bold;
+    }
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      margin-top: 10px;
+    }
+    th, td {
+      text-align: left;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    th {
+      background: var(--code-bg);
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .banner {
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .banner-warning {
+      background: #fef3c7;
+      border: 1px solid #fde68a;
+      color: #92400e;
+    }
+    .banner-success {
+      background: #dcfce7;
+      border: 1px solid #bbf7d0;
+      color: #166534;
+    }
+    .banner-error {
+      background: #fee2e2;
+      border: 1px solid #fecaca;
+      color: #991b1b;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    function App() {
+      const [messages, setMessages] = useState([
+        {
+          role: 'assistant',
+          text: 'Hello! I am your Spring AI MCP Assistant connected to Ollama, File MCP Server, and PostgreSQL MCP Server.\n\nTry running step 1: "Read input.txt and create customers.json" or use the quick buttons below.'
+        }
+      ]);
+      const [input, setInput] = useState('');
+      const [loading, setLoading] = useState(false);
+      const [previewData, setPreviewData] = useState(null);
+      const [previewLoading, setPreviewLoading] = useState(false);
+      const [approvalResult, setApprovalResult] = useState(null);
+      const [statusMsg, setStatusMsg] = useState(null);
+      const messagesEndRef = useRef(null);
+
+      useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, [messages]);
+
+      useEffect(() => {
+        loadPreview();
+      }, []);
+
+      const sendMessage = async (textToSend) => {
+        const query = textToSend || input;
+        if (!query.trim() || loading) return;
+
+        const userMsg = { role: 'user', text: query };
+        setMessages((prev) => [...prev, userMsg]);
+        setInput('');
+        setLoading(true);
+
+        try {
+          const res = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: query })
+          });
+          if (!res.ok) throw new Error(`Server returned HTTP ${res.status}`);
+          const text = await res.text();
+          setMessages((prev) => [...prev, { role: 'assistant', text }]);
+          // Refresh preview after file/db chat actions
+          loadPreview();
+        } catch (err) {
+          setMessages((prev) => [...prev, { role: 'assistant', text: `⚠️ Error: ${err.message}` }]);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      const loadPreview = async () => {
+        setPreviewLoading(true);
+        setStatusMsg(null);
+        try {
+          const res = await fetch('/api/imports/preview');
+          if (res.status === 404) {
+            setPreviewData(null);
+            return;
+          }
+          if (!res.ok) {
+            const err = await res.text();
+            throw new Error(err || `Status ${res.status}`);
+          }
+          const data = await res.json();
+          setPreviewData(data);
+        } catch (err) {
+          setPreviewData(null);
+        } finally {
+          setPreviewLoading(false);
+        }
+      };
+
+      const approveImport = async () => {
+        if (!confirm('Are you sure you want to approve this database import into PostgreSQL?')) return;
+        setLoading(true);
+        setStatusMsg(null);
+        setApprovalResult(null);
+
+        try {
+          const res = await fetch('/api/imports/approve', {
+            method: 'POST',
+            headers: { 'X-Approval-Confirm': 'yes' }
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.message || `Approval failed with status ${res.status}`);
+          setApprovalResult(data);
+          setStatusMsg({ type: 'success', text: `Import successful: ${data.inserted} inserted, ${data.skippedAsDuplicates} skipped.` });
+          loadPreview();
+        } catch (err) {
+          setStatusMsg({ type: 'error', text: err.message });
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      return (
+        <div className="container">
+          <header>
+            <div>
+              <h1>
+                Spring AI MCP Pipeline
+                <span className="badge">STDIO + Ollama</span>
+              </h1>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                End-to-End Orchestrator with Human-In-The-Loop Approval
+              </p>
+            </div>
+          </header>
+
+          {/* Left panel: Chat UI */}
+          <section className="panel">
+            <div className="panel-header">
+              <h2>Agent Chat</h2>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                {loading ? 'Processing...' : 'Ready'}
+              </span>
+            </div>
+
+            <div className="chat-messages">
+              {messages.map((m, idx) => (
+                <div key={idx} className={`message ${m.role}`}>
+                  {m.text}
+                </div>
+              ))}
+              {loading && <div className="message assistant">Thinking and calling MCP tools...</div>}
+              <div ref={messagesEndRef} />
+            </div>
+
+            <div className="quick-prompts">
+              <span className="quick-chip" onClick={() => sendMessage("Read input.txt, extract every customer full name and email, then create customers.json as a JSON array. Do not overwrite an existing file.")}>
+                1. Extract input.txt → customers.json
+              </span>
+              <span className="quick-chip" onClick={() => sendMessage("Use count_customers and list_customers to report the current customer records.")}>
+                2. Query PostgreSQL
+              </span>
+            </div>
+
+            <div className="chat-input-area">
+              <textarea
+                placeholder="Ask agent to read files, extract data, or query PostgreSQL..."
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                  }
+                }}
+              />
+              <button
+                className="btn-primary"
+                disabled={loading || !input.trim()}
+                onClick={() => sendMessage()}
+              >
+                Send
+              </button>
+            </div>
+          </section>
+
+          {/* Right panel: Human Approval & Preview */}
+          <section className="panel">
+            <div className="panel-header">
+              <h2>Human Review & Approval Gate</h2>
+              <button className="btn-outline" style={{ fontSize: '0.78rem', padding: '4px 8px' }} onClick={loadPreview} disabled={previewLoading}>
+                {previewLoading ? 'Refreshing...' : 'Refresh Preview'}
+              </button>
+            </div>
+
+            <div className="approval-content">
+              <div className="banner banner-warning">
+                <strong>Step 7 & 8: Explicit Human Approval Boundary</strong>
+                <span>The LLM has read-only database tools. It cannot write directly to PostgreSQL. Review proposed changes below before committing.</span>
+              </div>
+
+              {statusMsg && (
+                <div className={`banner banner-${statusMsg.type}`}>
+                  {statusMsg.text}
+                </div>
+              )}
+
+              {previewData ? (
+                <div className="card">
+                  <h3 style={{ fontSize: '0.95rem', marginBottom: '8px' }}>Pending File: <code>workspace/customers.json</code></h3>
+                  <div className="stats-row">
+                    <div className="stat-box">
+                      <div className="stat-number">{previewData.total}</div>
+                      <div className="stat-label">Total Records</div>
+                    </div>
+                    <div className="stat-box">
+                      <div className="stat-number" style={{ color: 'var(--success)' }}>{previewData.wouldInsert}</div>
+                      <div className="stat-label">New Inserts</div>
+                    </div>
+                    <div className="stat-box">
+                      <div className="stat-number" style={{ color: 'var(--text-muted)' }}>{previewData.alreadyPresent}</div>
+                      <div className="stat-label">Duplicates</div>
+                    </div>
+                  </div>
+
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Full Name</th>
+                        <th>Email</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {previewData.customers.map((c, i) => (
+                        <tr key={i}>
+                          <td>{c.fullName}</td>
+                          <td><code>{c.email}</code></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+
+                  <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                    <button
+                      className="btn-success"
+                      style={{ padding: '8px 16px' }}
+                      disabled={loading || previewData.wouldInsert === 0}
+                      onClick={approveImport}
+                    >
+                      Approve & Insert into PostgreSQL
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="card" style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '30px 10px' }}>
+                  <p>No <code>workspace/customers.json</code> found yet.</p>
+                  <p style={{ fontSize: '0.82rem', marginTop: '6px' }}>
+                    Ask the agent in the chat to extract customers from <code>input.txt</code> to generate the preview.
+                  </p>
+                </div>
+              )}
+
+              {approvalResult && (
+                <div className="card" style={{ background: '#f0fdf4', borderColor: '#bbf7d0' }}>
+                  <h4 style={{ fontSize: '0.9rem', color: '#166534', marginBottom: '6px' }}>Last Transaction Result</h4>
+                  <ul style={{ fontSize: '0.85rem', paddingLeft: '18px', color: '#14532d' }}>
+                    <li>Inserted: {approvalResult.inserted}</li>
+                    <li>Skipped: {approvalResult.skippedAsDuplicates}</li>
+                    <li>Total Processed: {approvalResult.totalProcessed}</li>
+                  </ul>
+                </div>
+              )}
+            </div>
+          </section>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
+

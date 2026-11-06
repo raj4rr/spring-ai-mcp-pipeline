@@ -14,23 +14,25 @@ Both MCP servers are launched as child Java processes and communicate over **STD
 - Spring Boot 4.0.3
 - Spring AI 2.0.2
 - PostgreSQL 17
-- Ollama model default: `qwen2.5:0.5b-instruct-fp16`
+- Ollama model default: `qwen2.5:0.5b-instruct-fp16` (or `qwen2.5:0.5B-F16` / `qwen2.5:0.5b`)
 
 Spring AI 2.0.x supports Spring Boot 4.0.x and 4.1.x. Confirm the official compatibility matrix before upgrading.
 
 ## Architecture
 
 ```text
-Client -> POST /api/chat -> Spring Boot Orchestrator -> Ollama
-                                  |
-                                  +-- MCP Client (STDIO) -> File MCP Server -> ./workspace
-                                  |
-                                  +-- MCP Client (STDIO) -> PostgreSQL MCP Server -> PostgreSQL
-
-Human review:
-GET /api/imports/preview
-POST /api/imports/approve  (requires X-Approval-Confirm: yes)
-   -> JDBC transaction -> PostgreSQL
+User / Browser (React Chat UI: http://localhost:8080)
+      |
+      v
+REST API (/api/chat, /api/imports) [Spring Boot AI Orchestrator] -> Ollama (qwen2.5:0.5b-instruct-fp16)
+      |
+      +-- MCP Client (STDIO) -> File MCP Server -> ./workspace (input.txt, customers.json)
+      |
+      +-- MCP Client (STDIO) -> PostgreSQL MCP Server (Read-only) -> PostgreSQL
+      |
+Human Approval Gate:
+      +-- GET  /api/imports/preview (Inspect parsed records & conflicts)
+      +-- POST /api/imports/approve (Header 'X-Approval-Confirm: yes') -> JDBC Transaction -> PostgreSQL
 ```
 
 ## Prerequisites
@@ -43,6 +45,18 @@ ollama serve
 ```
 
 Keep Ollama running in a separate terminal.
+
+## Quick start (`run-local.sh`)
+
+You can run the full pipeline with the provided script:
+
+```bash
+# Optional: specify a custom model tag if needed (default: qwen2.5:0.5b-instruct-fp16)
+# export OLLAMA_MODEL=qwen2.5:0.5B-F16
+
+chmod +x run-local.sh
+./run-local.sh
+```
 
 ## Build and start
 
@@ -71,7 +85,13 @@ java -jar ai-orchestrator/target/ai-orchestrator-1.0.0.jar
 
 On Windows PowerShell, use `$env:NAME="value"` for each environment variable. The configured MCP child executable is `java`, not `npm`/`.cmd`, so the batch-file wrapper is not needed.
 
-## Run the end-to-end example
+## Web UI (Chat & Approval)
+
+Once the application is running, open **`http://localhost:8080`** in your browser:
+- **Chat UI**: Interactive prompt interface with pre-built quick actions to run data extraction and queries.
+- **Human Review & Approval Panel**: Displays the live preview of `workspace/customers.json` (records, new inserts, duplicate conflicts) and provides a one-click button to approve and execute the database insertion transaction.
+
+## Run the end-to-end example (CLI)
 
 ### 1. Ask the agent to read the source file and create JSON
 
@@ -167,10 +187,12 @@ spring-ai-mcp-pipeline/
 - Check `curl http://localhost:11434/api/tags`.
 - Set `OLLAMA_BASE_URL` if Ollama runs elsewhere.
 
-**Model does not call tools**
-- Confirm the selected model supports tool calling.
-- Try `qwen3:8b` or another tool-capable model.
-- Inspect orchestrator logs and MCP child stderr output.
+**Model does not call tools or fails complex prompts**
+- Smaller lightweight models (such as `0.5B` variants) may struggle with complex structured tool calling compared to larger parameter models.
+- If you encounter tool-calling issues, test with a larger tool-capable model like `qwen2.5:7b`, `qwen2.5:14b`, or `qwen3:8b`:
+  ```bash
+  export OLLAMA_MODEL=qwen2.5:7b
+  ```
 
 **PostgreSQL connection failure**
 - Check `docker compose ps`.
