@@ -593,8 +593,8 @@
             </div>
 
             <div className="quick-prompts">
-              <span className="quick-chip" onClick={() => sendMessage("Call read_file on input.txt, extract ALL 4 customer full names and emails, then call write_file to save customers.json as a JSON array containing all 4 records with fields fullName and email.")}>
-                1. Extract input.txt → customers.json
+              <span className="quick-chip" onClick={() => sendMessage("Read input.txt and write to customers.json")}>
+                1. Read input.txt → write customers.json
               </span>
               <span className="quick-chip" onClick={() => sendMessage("Use count_customers and list_customers to report the current customer records.")}>
                 2. Query PostgreSQL
@@ -711,6 +711,11 @@
                   <p style={{ fontSize: '0.78rem', marginTop: '4px' }}>
                     Run the extraction prompt in the chat to generate <code>workspace/customers.json</code>.
                   </p>
+                  <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'center', gap: '8px' }}>
+                    <button className="btn-outline" style={{ fontSize: '0.8rem', padding: '6px 12px' }} onClick={loadPreview} disabled={previewLoading}>
+                      ↻ Refresh Preview
+                    </button>
+                  </div>
                 </div>
               )}
 

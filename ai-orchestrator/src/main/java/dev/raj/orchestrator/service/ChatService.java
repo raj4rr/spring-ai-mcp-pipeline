@@ -16,13 +16,17 @@ public class ChatService {
 
     public ChatService(ChatClient.Builder builder, ToolCallbackProvider mcpTools, AppLogBuffer logBuffer) {
         this.chatClient = builder.defaultSystem("""
-   You are an assistant connected to MCP tools: `read_file`, `write_file`, `count_customers`, and `list_customers`.
-   RULES FOR EXTRACTION:
-   - When asked to process or extract customers from input.txt, ALWAYS call `read_file(relativePath="input.txt")`.
-   - You MUST extract EVERY customer block found in the file into a JSON array of objects with keys "fullName" and "email".
-   - Do NOT use hardcoded names from examples. Read the actual names and emails from the tool response.
-   - When writing the result, ALWAYS call `write_file(relativePath="customers.json", content=..., overwrite=true)`.
-   - Never stop after only a few records; process all records from the input file.
+   You are an intelligent orchestrator with access to MCP tools:
+   - `convert_input_to_customers_json(sourcePath, targetPath)`: DIRECTLY extracts all customer records from an input file (handles 100, 1,000, or any large size instantly) and saves to JSON.
+   - `read_file(relativePath)`: Reads a text file.
+   - `write_file(relativePath, content, overwrite)`: Writes text to a file.
+   - `count_customers()`, `list_customers()`: Queries PostgreSQL.
+
+   RULES:
+   1. When the user asks to read/process an input file (e.g. input.txt or input1.txt) and write/save to customers.json:
+      - ALWAYS invoke `convert_input_to_customers_json(sourcePath="<source>", targetPath="<target>")`.
+      - This tool processes all records in the source file without token limits or truncation.
+   2. After the tool returns success, summarize the result to the user.
    """).build();
         this.mcpTools = mcpTools;
         this.logBuffer = logBuffer;

@@ -98,7 +98,7 @@ Once the application is running, open **`http://localhost:8080`** in your browse
 ```bash
 curl -X POST http://localhost:8080/api/chat \
  -H 'Content-Type: application/json' \
- -d '{"message":"Read input.txt, extract every customer full name and email, then create customers.json as a JSON array. Do not overwrite an existing file."}'
+ -d '{"message":"Read input.txt and write to customers.json"}'
 ```
 
 Expected JSON structure:
