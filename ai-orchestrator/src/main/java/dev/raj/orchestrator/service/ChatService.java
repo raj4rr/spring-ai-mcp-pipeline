@@ -1,31 +1,47 @@
 package dev.raj.orchestrator.service;
 
+import dev.raj.orchestrator.logging.AppLogBuffer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.stereotype.Service;
 
 @Service
 public class ChatService {
-
+    private static final Logger log = LoggerFactory.getLogger(ChatService.class);
     private final ChatClient chatClient;
     private final ToolCallbackProvider mcpTools;
+    private final AppLogBuffer logBuffer;
 
-    public ChatService(ChatClient.Builder builder, ToolCallbackProvider mcpTools) {
+    public ChatService(ChatClient.Builder builder, ToolCallbackProvider mcpTools, AppLogBuffer logBuffer) {
         this.chatClient = builder.defaultSystem("""
-   You are an assistant connected to MCP tools for files and PostgreSQL.
-   When asked to perform tasks, you MUST call the appropriate MCP tool:
-   - To read a workspace file, call the `read_file` tool.
-   - When asked to extract customers from input.txt, you MUST read the ENTIRE file, extract ALL customers (do not stop at 1, extract every single record), and write ALL of them into `customers.json`.
-   - To create or update files, call the `write_file` tool with relativePath="customers.json" and overwrite=true.
-   - When generating customers.json, format it strictly as a JSON array of all extracted objects with keys "fullName" and "email":
-     [{"fullName":"Alice Johnson","email":"alice@example.com"},{"fullName":"Bob Smith","email":"bob@example.com"},...]
-   - Do not merely print text asking the user to create the file if you can call write_file yourself.
-   - PostgreSQL tools (count_customers, list_customers, find_customer_by_email) are read-only.
+   You are an assistant connected to MCP tools: `read_file`, `write_file`, `count_customers`, and `list_customers`.
+   RULES FOR EXTRACTION:
+   - When asked to process or extract customers from input.txt, ALWAYS call `read_file(relativePath="input.txt")`.
+   - You MUST extract EVERY customer block found in the file into a JSON array of objects with keys "fullName" and "email".
+   - Do NOT use hardcoded names from examples. Read the actual names and emails from the tool response.
+   - When writing the result, ALWAYS call `write_file(relativePath="customers.json", content=..., overwrite=true)`.
+   - Never stop after only a few records; process all records from the input file.
    """).build();
         this.mcpTools = mcpTools;
+        this.logBuffer = logBuffer;
     }
 
     public String chat(String message) {
-        return chatClient.prompt().user(message).tools(mcpTools).call().content();
+        log.info("Incoming chat query: {}", message);
+        logBuffer.add("INFO", "AI Orchestrator", "Received chat message: \"" + message + "\"");
+        logBuffer.add("DEBUG", "MCP Client", "Invoking Ollama with discovered MCP tools...");
+
+        try {
+            String response = chatClient.prompt().user(message).tools(mcpTools).call().content();
+            log.info("Agent responded (length: {} chars)", response != null ? response.length() : 0);
+            logBuffer.add("INFO", "AI Orchestrator", "Agent call completed successfully.");
+            return response;
+        } catch (Exception e) {
+            log.error("Error during agent execution: {}", e.getMessage(), e);
+            logBuffer.add("ERROR", "AI Orchestrator", "Execution error: " + e.getMessage());
+            throw e;
+        }
     }
 }

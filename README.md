@@ -14,7 +14,7 @@ Both MCP servers are launched as child Java processes and communicate over **STD
 - Spring Boot 4.0.3
 - Spring AI 2.0.2
 - PostgreSQL 17
-- Ollama model default: `qwen2.5:0.5b-instruct-fp16` (or `qwen2.5:0.5B-F16` / `qwen2.5:0.5b`)
+- Ollama model default: `qwen2.5:7b` (recommended for full extraction & tool calling; or `qwen2.5:0.5b-instruct-fp16`)
 
 Spring AI 2.0.x supports Spring Boot 4.0.x and 4.1.x. Confirm the official compatibility matrix before upgrading.
 
@@ -24,7 +24,7 @@ Spring AI 2.0.x supports Spring Boot 4.0.x and 4.1.x. Confirm the official compa
 User / Browser (React Chat UI: http://localhost:8080)
       |
       v
-REST API (/api/chat, /api/imports) [Spring Boot AI Orchestrator] -> Ollama (qwen2.5:0.5b-instruct-fp16)
+REST API (/api/chat, /api/imports) [Spring Boot AI Orchestrator] -> Ollama (qwen2.5:7b)
       |
       +-- MCP Client (STDIO) -> File MCP Server -> ./workspace (input.txt, customers.json)
       |
@@ -40,7 +40,7 @@ Human Approval Gate:
 Install JDK 21+, Maven 3.9+, Docker, and Ollama. Then:
 
 ```bash
-ollama pull qwen2.5:0.5b-instruct-fp16
+ollama pull qwen2.5:7b
 ollama serve
 ```
 
@@ -74,7 +74,7 @@ The orchestrator launches the two MCP server JARs automatically. Run from the pr
 Optional environment overrides:
 
 ```bash
-export OLLAMA_MODEL=qwen2.5:0.5b-instruct-fp16
+export OLLAMA_MODEL=qwen2.5:7b
 export OLLAMA_BASE_URL=http://localhost:11434
 export MCP_FILES_ROOT="$PWD/workspace"
 export DB_URL=jdbc:postgresql://localhost:5432/mcp_demo

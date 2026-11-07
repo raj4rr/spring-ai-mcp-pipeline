@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Spring AI MCP Pipeline — Live Step-by-Step Dashboard</title>
+  <title>Spring AI MCP Pipeline — Live Dashboard & Logs</title>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -17,9 +17,7 @@
       --primary: #2563eb;
       --primary-hover: #1d4ed8;
       --success: #16a34a;
-      --success-bg: #f0fdf4;
       --warning: #f59e0b;
-      --warning-bg: #fefce8;
       --danger: #dc2626;
       --code-bg: #f1f5f9;
       --active-step: #3b82f6;
@@ -32,12 +30,12 @@
       line-height: 1.5;
     }
     .container {
-      max-width: 1400px;
+      max-width: 1440px;
       margin: 0 auto;
-      padding: 20px;
+      padding: 18px;
       display: grid;
-      grid-template-columns: 330px 1fr 1fr;
-      gap: 20px;
+      grid-template-columns: 310px 1.2fr 1fr;
+      gap: 18px;
       min-height: 100vh;
     }
     header {
@@ -69,12 +67,12 @@
       border-radius: 12px;
       display: flex;
       flex-direction: column;
-      height: 84vh;
+      height: 60vh;
       box-shadow: 0 1px 3px rgba(0,0,0,0.05);
       overflow: hidden;
     }
     .panel-header {
-      padding: 12px 16px;
+      padding: 10px 14px;
       border-bottom: 1px solid var(--border);
       display: flex;
       justify-content: space-between;
@@ -82,7 +80,7 @@
       background: #fafafa;
     }
     .panel-header h2 {
-      font-size: 0.95rem;
+      font-size: 0.92rem;
       font-weight: 600;
       display: flex;
       align-items: center;
@@ -90,17 +88,17 @@
     }
     /* Stepper Column */
     .steps-list {
-      padding: 14px;
+      padding: 12px;
       overflow-y: auto;
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
     }
     .step-item {
       display: flex;
-      gap: 12px;
-      padding: 10px 12px;
+      gap: 10px;
+      padding: 8px 10px;
       border-radius: 8px;
       border: 1px solid var(--border);
       background: white;
@@ -117,88 +115,57 @@
       background: #f0fdf4;
     }
     .step-num {
-      width: 24px;
-      height: 24px;
+      width: 22px;
+      height: 22px;
       border-radius: 50%;
       background: #e2e8f0;
       color: #475569;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       font-weight: bold;
       flex-shrink: 0;
     }
-    .step-item.active .step-num {
-      background: var(--active-step);
-      color: white;
-    }
-    .step-item.completed .step-num {
-      background: var(--success);
-      color: white;
-    }
-    .step-info {
-      flex: 1;
-    }
-    .step-title {
-      font-size: 0.82rem;
-      font-weight: 600;
-      color: var(--text);
-    }
-    .step-desc {
-      font-size: 0.72rem;
-      color: var(--text-muted);
-      margin-top: 2px;
-    }
+    .step-item.active .step-num { background: var(--active-step); color: white; }
+    .step-item.completed .step-num { background: var(--success); color: white; }
+    .step-info { flex: 1; }
+    .step-title { font-size: 0.8rem; font-weight: 600; color: var(--text); }
+    .step-desc { font-size: 0.7rem; color: var(--text-muted); margin-top: 1px; }
     .step-tag {
       display: inline-block;
-      margin-top: 4px;
-      font-size: 0.68rem;
-      padding: 1px 6px;
+      margin-top: 3px;
+      font-size: 0.65rem;
+      padding: 1px 5px;
       border-radius: 4px;
       font-weight: 600;
       background: #e2e8f0;
       color: #334155;
     }
-    .step-item.active .step-tag {
-      background: #bfdbfe;
-      color: #1e40af;
-    }
-    .step-item.completed .step-tag {
-      background: #bbf7d0;
-      color: #166534;
-    }
+    .step-item.active .step-tag { background: #bfdbfe; color: #1e40af; }
+    .step-item.completed .step-tag { background: #bbf7d0; color: #166534; }
 
     /* Chat layout */
     .chat-messages {
       flex: 1;
-      padding: 16px;
+      padding: 14px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
     }
     .message {
       max-width: 90%;
-      padding: 12px 14px;
+      padding: 10px 14px;
       border-radius: 10px;
-      font-size: 0.88rem;
+      font-size: 0.86rem;
       white-space: pre-wrap;
       word-break: break-word;
     }
-    .message.user {
-      align-self: flex-end;
-      background-color: var(--primary);
-      color: white;
-    }
-    .message.assistant {
-      align-self: flex-start;
-      background-color: var(--code-bg);
-      color: var(--text);
-      border: 1px solid var(--border);
-    }
+    .message.user { align-self: flex-end; background-color: var(--primary); color: white; }
+    .message.assistant { align-self: flex-start; background-color: var(--code-bg); color: var(--text); border: 1px solid var(--border); }
     .chat-input-area {
-      padding: 12px;
+      padding: 10px 14px;
       border-top: 1px solid var(--border);
       display: flex;
       gap: 8px;
@@ -209,16 +176,16 @@
       border: 1px solid var(--border);
       border-radius: 8px;
       resize: none;
-      height: 48px;
+      height: 44px;
       font-family: inherit;
-      font-size: 0.88rem;
+      font-size: 0.86rem;
     }
     textarea:focus { outline: 2px solid var(--primary); }
     button {
-      padding: 0 14px;
+      padding: 0 12px;
       border: none;
-      border-radius: 8px;
-      font-size: 0.85rem;
+      border-radius: 6px;
+      font-size: 0.82rem;
       font-weight: 600;
       cursor: pointer;
       display: inline-flex;
@@ -229,11 +196,13 @@
     .btn-primary { background: var(--primary); color: white; }
     .btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
     .btn-success { background: var(--success); color: white; }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-danger:hover:not(:disabled) { background: #b91c1c; }
     .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
     .btn-outline:hover:not(:disabled) { background: var(--code-bg); }
     button:disabled { opacity: 0.6; cursor: not-allowed; }
     .quick-prompts {
-      padding: 8px 12px;
+      padding: 6px 12px;
       display: flex;
       gap: 6px;
       background: #fafafa;
@@ -245,64 +214,99 @@
       border: 1px solid var(--border);
       border-radius: 14px;
       padding: 3px 8px;
-      font-size: 0.74rem;
+      font-size: 0.72rem;
       cursor: pointer;
       white-space: nowrap;
     }
     .quick-chip:hover { border-color: var(--primary); color: var(--primary); }
 
-    /* Approval and inspect layout */
+    /* Approval layout */
     .approval-content {
-      padding: 14px;
+      padding: 12px;
       overflow-y: auto;
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 12px;
     }
     .card {
       border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 12px;
+      padding: 10px;
       background: white;
     }
     .stats-row {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 8px;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
     .stat-box {
       background: var(--code-bg);
-      border-radius: 8px;
-      padding: 8px;
+      border-radius: 6px;
+      padding: 6px;
       text-align: center;
     }
-    .stat-number { font-size: 1.2rem; font-weight: bold; }
-    .stat-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.82rem;
-      margin-top: 8px;
-    }
-    th, td {
-      text-align: left;
-      padding: 6px 8px;
-      border-bottom: 1px solid var(--border);
-    }
+    .stat-number { font-size: 1.15rem; font-weight: bold; }
+    .stat-label { font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 6px; }
+    th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); }
     th { background: var(--code-bg); color: var(--text-muted); font-weight: 600; }
     .banner {
-      padding: 10px 12px;
-      border-radius: 8px;
-      font-size: 0.8rem;
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 0.78rem;
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 2px;
     }
     .banner-warning { background: #fef3c7; border: 1px solid #fde68a; color: #92400e; }
     .banner-success { background: #dcfce7; border: 1px solid #bbf7d0; color: #166534; }
     .banner-error { background: #fee2e2; border: 1px solid #fecaca; color: #991b1b; }
+
+    /* Logs Console */
+    .logs-panel {
+      grid-column: 1 / -1;
+      background: #0f172a;
+      color: #e2e8f0;
+      border-radius: 10px;
+      height: 24vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.78rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    }
+    .logs-header {
+      background: #1e293b;
+      padding: 8px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #334155;
+    }
+    .logs-body {
+      flex: 1;
+      padding: 10px 14px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .log-line {
+      display: flex;
+      gap: 10px;
+      line-height: 1.4;
+    }
+    .log-time { color: #64748b; flex-shrink: 0; }
+    .log-level { font-weight: bold; flex-shrink: 0; width: 44px; }
+    .log-level.INFO { color: #38bdf8; }
+    .log-level.WARN { color: #facc15; }
+    .log-level.ERROR { color: #f87171; }
+    .log-level.DEBUG { color: #a78bfa; }
+    .log-category { color: #34d399; flex-shrink: 0; }
+    .log-msg { color: #f1f5f9; word-break: break-all; }
   </style>
 </head>
 <body>
@@ -327,7 +331,7 @@
       const [messages, setMessages] = useState([
         {
           role: 'assistant',
-          text: 'Welcome to the Spring AI MCP Pipeline!\n\nAll 9 architectural steps from the diagram are tracked live on the left panel. Click the quick button below or type a query to start.'
+          text: 'Welcome to the Spring AI MCP Pipeline!\n\nAll 9 steps from the architecture are tracked live on the left panel, and backend system logs stream in real-time below.'
         }
       ]);
       const [input, setInput] = useState('');
@@ -338,15 +342,42 @@
       const [previewLoading, setPreviewLoading] = useState(false);
       const [approvalResult, setApprovalResult] = useState(null);
       const [statusMsg, setStatusMsg] = useState(null);
+      const [logs, setLogs] = useState([]);
       const messagesEndRef = useRef(null);
+      const logsEndRef = useRef(null);
 
       useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
       }, [messages]);
 
       useEffect(() => {
+        logsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, [logs]);
+
+      // Poll preview & logs periodically
+      useEffect(() => {
         loadPreview();
+        fetchLogs();
+        const interval = setInterval(fetchLogs, 1500);
+        return () => clearInterval(interval);
       }, []);
+
+      const fetchLogs = async () => {
+        try {
+          const res = await fetch('/api/logs');
+          if (res.ok) {
+            const data = await res.json();
+            setLogs(data);
+          }
+        } catch (e) {}
+      };
+
+      const clearLogs = async () => {
+        try {
+          await fetch('/api/logs', { method: 'DELETE' });
+          setLogs([]);
+        } catch (e) {}
+      };
 
       const sendMessage = async (textToSend) => {
         const query = textToSend || input;
@@ -357,15 +388,12 @@
         setInput('');
         setLoading(true);
 
-        // Step 1: Request sent
         setCurrentStep(1);
         setCompletedSteps([1]);
-
-        // Simulate step progression through agent execution
-        setTimeout(() => { setCurrentStep(2); setCompletedSteps([1, 2]); }, 400);
-        setTimeout(() => { setCurrentStep(3); setCompletedSteps([1, 2, 3]); }, 800);
-        setTimeout(() => { setCurrentStep(4); setCompletedSteps([1, 2, 3, 4]); }, 1300);
-        setTimeout(() => { setCurrentStep(5); setCompletedSteps([1, 2, 3, 4, 5]); }, 1800);
+        setTimeout(() => { setCurrentStep(2); setCompletedSteps([1, 2]); }, 350);
+        setTimeout(() => { setCurrentStep(3); setCompletedSteps([1, 2, 3]); }, 750);
+        setTimeout(() => { setCurrentStep(4); setCompletedSteps([1, 2, 3, 4]); }, 1200);
+        setTimeout(() => { setCurrentStep(5); setCompletedSteps([1, 2, 3, 4, 5]); }, 1700);
 
         try {
           const res = await fetch('/api/chat', {
@@ -377,9 +405,8 @@
           const data = await res.json();
           const text = data.answer || JSON.stringify(data);
           setMessages((prev) => [...prev, { role: 'assistant', text }]);
-
-          // Check if file generated (Step 6 & 7)
           await loadPreview();
+          fetchLogs();
         } catch (err) {
           setMessages((prev) => [...prev, { role: 'assistant', text: `⚠️ Error: ${err.message}` }]);
         } finally {
@@ -408,7 +435,6 @@
           }
           const data = await res.json();
           setPreviewData(data);
-          // Reached Step 6 & 7 (customers.json exists and preview ready)
           setCurrentStep(7);
           setCompletedSteps((prev) => Array.from(new Set([...prev, 1, 2, 3, 4, 5, 6, 7])));
         } catch (err) {
@@ -424,7 +450,6 @@
         setStatusMsg(null);
         setApprovalResult(null);
 
-        // Step 8: Saving to PostgreSQL
         setCurrentStep(8);
         setCompletedSteps((prev) => Array.from(new Set([...prev, 8])));
 
@@ -438,7 +463,6 @@
           setApprovalResult(data);
           setStatusMsg({ type: 'success', text: `Transaction committed: ${data.inserted} inserted, ${data.skippedAsDuplicates} skipped.` });
 
-          // Step 9: Finished response
           setCurrentStep(9);
           setCompletedSteps([1, 2, 3, 4, 5, 6, 7, 8, 9]);
 
@@ -451,6 +475,56 @@
           ]);
 
           loadPreview();
+          fetchLogs();
+        } catch (err) {
+          setStatusMsg({ type: 'error', text: err.message });
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      const rejectImport = async () => {
+        if (!confirm('Reject this import? This will discard the pending customer files and make no changes to PostgreSQL.')) return;
+        setLoading(true);
+        setStatusMsg(null);
+        try {
+          const res = await fetch('/api/imports/reject', { method: 'POST' });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.message || 'Reject failed');
+          setPreviewData(null);
+          setCurrentStep(1);
+          setCompletedSteps([]);
+          setStatusMsg({ type: 'warning', text: `Import Rejected: ${data.message}` });
+          setMessages((prev) => [
+            ...prev,
+            { role: 'assistant', text: `❌ Import Rejected by reviewer. Discarded ${data.deletedFiles} pending file(s). No changes written to PostgreSQL.` }
+          ]);
+          fetchLogs();
+        } catch (err) {
+          setStatusMsg({ type: 'error', text: err.message });
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      const resetAllData = async () => {
+        if (!confirm('⚠️ Are you sure you want to DELETE ALL customer records from PostgreSQL and remove customers.json?')) return;
+        setLoading(true);
+        setStatusMsg(null);
+        setApprovalResult(null);
+        try {
+          const res = await fetch('/api/imports/reset', { method: 'DELETE' });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.message || 'Reset failed');
+          setPreviewData(null);
+          setCurrentStep(1);
+          setCompletedSteps([]);
+          setStatusMsg({ type: 'success', text: `Cleaned: Deleted ${data.deletedDbRows} database row(s) and customers.json.` });
+          setMessages((prev) => [
+            ...prev,
+            { role: 'assistant', text: `🗑️ System Reset: Deleted ${data.deletedDbRows} record(s) from PostgreSQL and deleted workspace/customers.json.` }
+          ]);
+          fetchLogs();
         } catch (err) {
           setStatusMsg({ type: 'error', text: err.message });
         } finally {
@@ -467,7 +541,7 @@
                 <span className="badge">STDIO + Ollama</span>
               </h1>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>
-                End-to-End Execution Flow with Real-Time Step Tracker & Human Approval Gate
+                End-to-End Execution Flow with Real-Time Step Tracker, Live Logs & Human Approval Gate
               </p>
             </div>
           </header>
@@ -553,9 +627,14 @@
           <section className="panel">
             <div className="panel-header">
               <h2>Human Approval Gate (Step 7 & 8)</h2>
-              <button className="btn-outline" style={{ fontSize: '0.74rem', padding: '3px 6px' }} onClick={loadPreview} disabled={previewLoading}>
-                {previewLoading ? '...' : 'Refresh'}
-              </button>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <button className="btn-outline" style={{ fontSize: '0.74rem', padding: '3px 8px' }} onClick={loadPreview} disabled={previewLoading}>
+                  {previewLoading ? '...' : 'Refresh'}
+                </button>
+                <button className="btn-danger" style={{ fontSize: '0.74rem', padding: '3px 8px' }} onClick={resetAllData} disabled={loading} title="Delete all customers from PostgreSQL and remove customers.json">
+                  🗑️ Delete All
+                </button>
+              </div>
             </div>
 
             <div className="approval-content">
@@ -572,7 +651,9 @@
 
               {previewData ? (
                 <div className="card">
-                  <h3 style={{ fontSize: '0.9rem', marginBottom: '8px' }}>Previewing <code>workspace/customers.json</code></h3>
+                  <h3 style={{ fontSize: '0.88rem', marginBottom: '8px' }}>
+                    Pending Files: {previewData.sourceFiles ? previewData.sourceFiles.map(f => <code key={f} style={{ marginRight: '4px' }}>workspace/{f}</code>) : <code>workspace/customers.json</code>}
+                  </h3>
                   <div className="stats-row">
                     <div className="stat-box">
                       <div className="stat-number">{previewData.total}</div>
@@ -605,14 +686,22 @@
                     </tbody>
                   </table>
 
-                  <div style={{ marginTop: '14px', display: 'flex', justifyContent: 'flex-end' }}>
+                  <div style={{ marginTop: '14px', display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                    <button
+                      className="btn-outline"
+                      style={{ padding: '8px 14px', color: 'var(--danger)', borderColor: 'var(--danger)' }}
+                      disabled={loading}
+                      onClick={rejectImport}
+                    >
+                      ✕ Reject
+                    </button>
                     <button
                       className="btn-success"
                       style={{ padding: '8px 14px' }}
                       disabled={loading || previewData.wouldInsert === 0}
                       onClick={approveImport}
                     >
-                      Step 8: Approve & Commit to PostgreSQL
+                      ✓ Approve & Insert into PostgreSQL
                     </button>
                   </div>
                 </div>
@@ -635,6 +724,41 @@
                   </ul>
                 </div>
               )}
+            </div>
+          </section>
+
+          {/* Row 2: Live Log Terminal / Console */}
+          <section className="logs-panel">
+            <div className="logs-header">
+              <span style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span>⚡ Live Server & MCP Execution Logs</span>
+                <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>({logs.length} entries)</span>
+              </span>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button className="btn-outline" style={{ color: '#cbd5e1', borderColor: '#475569', fontSize: '0.72rem', padding: '2px 8px' }} onClick={fetchLogs}>
+                  Refresh Logs
+                </button>
+                <button className="btn-outline" style={{ color: '#cbd5e1', borderColor: '#475569', fontSize: '0.72rem', padding: '2px 8px' }} onClick={clearLogs}>
+                  Clear Console
+                </button>
+              </div>
+            </div>
+            <div className="logs-body">
+              {logs.length === 0 ? (
+                <div style={{ color: '#64748b', fontStyle: 'italic', padding: '8px 0' }}>
+                  Waiting for incoming operations... (queries, MCP tool executions, approvals)
+                </div>
+              ) : (
+                logs.map((l, i) => (
+                  <div key={i} className="log-line">
+                    <span className="log-time">[{l.timestamp}]</span>
+                    <span className={`log-level ${l.level}`}>{l.level}</span>
+                    <span className="log-category">[{l.category}]</span>
+                    <span className="log-msg">{l.message}</span>
+                  </div>
+                ))
+              )}
+              <div ref={logsEndRef} />
             </div>
           </section>
         </div>
